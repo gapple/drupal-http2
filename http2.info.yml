@@ -1,0 +1,5 @@
+name: HTTP/2
+type: module
+description: HTTP/2 Optimizations
+core: 8.x
+package: Custom
