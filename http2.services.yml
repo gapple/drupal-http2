@@ -1,0 +1,6 @@
+services:
+  cache_context.http2:
+    class: Drupal\http2\Cache\Http2CacheContext
+    arguments: ['@request_stack']
+    tags:
+      - { name: cache.context}
