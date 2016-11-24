@@ -24,7 +24,10 @@ class Http2CacheContext extends RequestStackCacheContextBase implements CacheCon
     $request = $this->requestStack->getCurrentRequest();
 
     // Apache mod_http2.
-    if ($request->server->get('SERVER_PROTOCOL') === 'HTTP/2') {
+    // $_SERVER['HTTP2'] is available with mod_http2 >= 1.4.6.
+    // $_SERVER['SERVER_PROTOCOL'] value changed from 'HTTP/2' to 'HTTP/2.0' in
+    // mod_http2 1.5.2.
+    if ($request->server->get('HTTP2', FALSE) === 'on' || strpos($request->server->get('SERVER_PROTOCOL'), 'HTTP/2') === 0) {
       return '1';
     }
 
