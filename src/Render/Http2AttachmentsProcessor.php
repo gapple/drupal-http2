@@ -1,13 +1,50 @@
 <?php
+
 namespace Drupal\http2\Render;
 
+use Drupal\Core\Asset\AssetCollectionRendererInterface;
+use Drupal\Core\Asset\AssetResolverInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Render\HtmlResponseAttachmentsProcessor;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\http2\Cache\Http2CacheContext;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Class HtmlResponseAttachmentsProcessor.
  */
 class Http2AttachmentsProcessor extends HtmlResponseAttachmentsProcessor {
+
+  protected $http2CacheContext;
+
+  /**
+   * Constructs a Http2AttachmentsProcessor object.
+   *
+   * @param \Drupal\Core\Asset\AssetResolverInterface $asset_resolver
+   *   An asset resolver.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   A config factory for retrieving required config objects.
+   * @param \Drupal\Core\Asset\AssetCollectionRendererInterface $css_collection_renderer
+   *   The CSS asset collection renderer.
+   * @param \Drupal\Core\Asset\AssetCollectionRendererInterface $js_collection_renderer
+   *   The JS asset collection renderer.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler service.
+   * @param \Drupal\http2\Cache\Http2CacheContext $http2CacheContext
+   *   The HTTP2 Cache Context service.
+   */
+  public function __construct(AssetResolverInterface $asset_resolver, ConfigFactoryInterface $config_factory, AssetCollectionRendererInterface $css_collection_renderer, AssetCollectionRendererInterface $js_collection_renderer, RequestStack $request_stack, RendererInterface $renderer, ModuleHandlerInterface $module_handler, Http2CacheContext $http2CacheContext) {
+
+    $this->http2CacheContext = $http2CacheContext;
+
+    parent::__construct($asset_resolver, $config_factory, $css_collection_renderer, $js_collection_renderer, $request_stack, $renderer, $module_handler);
+  }
 
   /**
    * {@inheritdoc}
@@ -16,12 +53,7 @@ class Http2AttachmentsProcessor extends HtmlResponseAttachmentsProcessor {
     $variables = [];
 
     // Don't optimize assets for HTTP/2 requests.
-    $request = $this->requestStack->getCurrentRequest();
-    $isHttp2 = FALSE;
-    // Apache mod_http2.
-    if ($request->server->get('SERVER_PROTOCOL') === 'HTTP/2') {
-      $isHttp2 = TRUE;
-    }
+    $isHttp2 = ($this->http2CacheContext->getContext() === '1');
 
     // Print styles - if present.
     if (isset($placeholders['styles'])) {
